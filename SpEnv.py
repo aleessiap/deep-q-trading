@@ -12,18 +12,18 @@ class SpEnv(gym.Env):
     def __init__(self, minLimit=None, maxLimit=None, operationCost = 0, observationWindow = 40, outputFile = ""):
         self.episodio=1
 
+#pandas
         spTimeserie = pandas.read_csv('./dataset/sp500Hour.csv')[minLimit:maxLimit] # opening the dataset
         Date = spTimeserie.ix[:, 'Date'].tolist()
         Time = spTimeserie.ix[:, 'Time'].tolist()
-        Open = spTimeserie.ix[:, 'Open'].tolist()
-        High = spTimeserie.ix[:, 'High'].tolist()
-        Low = spTimeserie.ix[:, 'Low'].tolist()
-        Close = spTimeserie.ix[:, 'Close'].tolist()
-        Volume = spTimeserie.ix[:, 'Volume'].tolist()
+        Open = spTimeserie.ix[:, 'Open'].tolist()       #valore ad apertura
+        High = spTimeserie.ix[:, 'High'].tolist()       #picco più alto valore
+        Low = spTimeserie.ix[:, 'Low'].tolist()         #picco più basso valore
+        Close = spTimeserie.ix[:, 'Close'].tolist()     #valore a chiusura
+        Volume = spTimeserie.ix[:, 'Volume'].tolist()   #num volte in cui è stata fatta un'azione nel periodo di tempo
 
         self.weekData = MergedDataStructure(delta=8,filename="./dataset/sp500Week.csv")
         self.dayData = MergedDataStructure(delta=20,filename="./dataset/sp500Day.csv")
-        
         
         self.output=False
 
@@ -32,19 +32,23 @@ class SpEnv(gym.Env):
             self.outputFile=open(outputFile, "w+")
             self.outputFile.write("date,open,close,reward,possible_gain,hit\n")
 
-        self.low = numpy.array([-numpy.inf])
-        self.high = numpy.array([+numpy.inf])
-        self.action_space = spaces.Discrete(3) # the action space is just 0,1,2 which means nop,buy,sell
+        self.low = numpy.array([-numpy.inf])     #-infinito
+        self.high = numpy.array([+numpy.inf])    #+infinito
+        self.action_space = spaces.Discrete(3)   # the action space is just 0,1,2 which means nop,buy,sell
+       
+       
         self.observation_space = spaces.Box(self.low, self.high, dtype=numpy.float32)
 
 
         self.history=[]
         self.observationWindow = observationWindow
         self.currentObservation = observationWindow
+        
         #print(self.currentObservation)
         self.operationCost=operationCost
         self.done = False
         self.limit = len(Open)
+
         for i in range(0,self.limit): # organizing the dataset as a list of dictionaries
             self.history.append({'Date' : Date[i],'Time' : Time[i], 'Open': Open[i], 'High': High[i], 'Low': Low[i], 'Close': Close[i], 'Volume': Volume[i] })
         
@@ -71,7 +75,7 @@ class SpEnv(gym.Env):
 
         currentData=currentData + dayList + weekList
 
-        closeMinusOpen=list(map(lambda x: (x["Close"]-x["Open"])/x["Open"],currentData))
+        closeMinusOpen=list(map(lambda x: (x["Close"]-x["Open"])/x["Open"],currentData)) #reward
         # high=list(map(lambda x: x["High"],currentData))
         # low=list(map(lambda x: x["Low"],currentData))
         # volume=list(map(lambda x: x["Volume"],currentData))
@@ -83,11 +87,11 @@ class SpEnv(gym.Env):
 
         self.openValue = self.history[self.currentObservation]['Open']
         self.possibleGain = (self.closeValue - self.openValue)*50
-        if(action == 1):
+        if(action == 1): #long
             self.reward = self.possibleGain-self.operationCost
-        elif(action==2):
+        elif(action==2): #short
             self.reward = (-self.possibleGain)-self.operationCost
-        else:
+        else:   #hold
             self.reward = 0
 
 
@@ -96,8 +100,6 @@ class SpEnv(gym.Env):
         self.done=True
         
 
-
-        
         state = numpy.array([closeMinusOpen])
         #state = numpy.array([closeMinusOpen,high,low,volume])
         #print(str(action) + " " + str(self.reward))

@@ -10,8 +10,9 @@ from rl.policy import EpsGreedyQPolicy
 import sys
 
 
-nb_actions = 3
+nb_actions = 3   #long, short, hold 
 
+#rete neurale
 model = Sequential()
 model.add(Flatten(input_shape=(50,1,68)))
 model.add(Dense(256,activation='linear'))
@@ -26,18 +27,18 @@ model.add(Activation('linear'))
 
 
 
-
+#inizializzazione agente
 dqt = DeepQTrading(
     model=model,
-    explorations=[(0.1,100)],
-    trainSize=datetime.timedelta(days=365),
-    validationSize=datetime.timedelta(days=30),
-    testSize=datetime.timedelta(days=30),
-    outputFile="output.csv",
-    begin=datetime.datetime(2004,1,1,0,0,0,0),
-    end=datetime.datetime(2017,12,1,0,0,0,0),
-    nbActions=nb_actions
+    explorations=[(0.1,100)],                   #casualità , num volte che il dataset viene passato 
+    trainSize=datetime.timedelta(days=365),     #giorni training
+    validationSize=datetime.timedelta(days=30), #giorni validation
+    testSize=datetime.timedelta(days=30),       #giorni test
+    outputFile="output.csv",                    #file in cui scrive i risultati
+    begin=datetime.datetime(2004,1,1,0,0,0,0),  #inizio analisi
+    end=datetime.datetime(2017,12,1,0,0,0,0),   #fine analisi
+    nbActions=nb_actions                        #num azioni possibili
     )
 
-dqt.run()
-dqt.end()
+dqt.run()                                       #avvio dell'agente
+dqt.end()                                       #end agente
